@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { createVendor, getVendors, deleteVendor } from "@/lib/api";
+import { withAuthenticator } from "@aws-amplify/ui-react";
+import '@aws-amplify/ui-react/styles.css'
+import { getVendors, createVendor, deleteVendor } from "@/lib/api";
 import { Vendor } from '@/types/vendor';
 
-export default function Home() {
+// withAuthenticator injects 'SignOut' and 'user' as props automatically
+ function Home({ signOut, user }: { signOut?: () => void; user?: any }) {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [form, setForm] = useState({ name: '', category: '', contactEmail: '' });
   const [loading, setLoading] = useState(false);
@@ -19,24 +22,20 @@ export default function Home() {
     }
   };
 
-  //Load vendors once when the page first renders
   useEffect(() => {
     loadVendors();
   }, []);
-  // The empty [] means this runs only once. Without it, the effect would
-  // run after every render, causing an infinite loop of fetch requests.
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault(); // Prevent the browser from reloading the page on submit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
     try {
       await createVendor(form);
-      setForm ({ name: '', category: '', contactEmail: '' }); // Reset the form
-      await loadVendors(); // Refresh the list from DynamoDB
-
+      setForm({ name: '', category: '', contactEmail: '' });
+      await loadVendors();
     } catch {
-      setError('Failed to add vendor. Please try again.');
+      setError('Failed to add vendor.');
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,7 @@ export default function Home() {
   const handleDelete = async (vendorId: string) => {
     try {
       await deleteVendor(vendorId);
-      await loadVendors(); // Refresh after deleting
+      await loadVendors();
     } catch {
       setError('Failed to delete vendor.');
     }
@@ -53,8 +52,19 @@ export default function Home() {
 
  return (
     <main className="p-10 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2 text-gray-900">Vendor Tracker</h1>
-      <p className="text-gray-500 mb-8">Manage your vendors, stored in AWS DynamoDB.</p>
+      {/* ── Header ── */}
+      <header className="flex justify-between items-center mb-8 p-4 bg-gray-100 rounded">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Vendor Tracker</h1>
+          <p className="text-sm text-gray-500">Signed in as: {user?.signInDetails?.loginId}</p>
+        </div>
+        <button
+          onClick={signOut}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+        >
+          Sign Out
+        </button>
+      </header>
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
@@ -67,21 +77,21 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Add New Vendor</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
-              className="w-full p-2 border rounded text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full p-2 border rounded text-black"
               placeholder="Vendor Name"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
               required
             />
             <input
-              className="w-full p-2 border rounded text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full p-2 border rounded text-black"
               placeholder="Category (e.g. SaaS, Hardware)"
               value={form.category}
               onChange={e => setForm({ ...form, category: e.target.value })}
               required
             />
             <input
-              className="w-full p-2 border rounded text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full p-2 border rounded text-black"
               placeholder="Contact Email"
               type="email"
               value={form.contactEmail}
@@ -91,7 +101,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white p-2 rounded hover:bg-orange-600 disabled:bg-gray-400 transition-colors"
+              className="w-full bg-orange-500 text-white p-2 rounded hover:bg-orange-600 disabled:bg-gray-400"
             >
               {loading ? 'Saving...' : 'Add Vendor'}
             </button>
@@ -105,7 +115,7 @@ export default function Home() {
           </h2>
           <div className="space-y-3">
             {vendors.length === 0 ? (
-              <p className="text-gray-400 italic">No vendors yet. Add one using the form.</p>
+              <p className="text-gray-400 italic">No vendors yet.</p>
             ) : (
               vendors.map(v => (
                 <div
@@ -130,5 +140,9 @@ export default function Home() {
 
       </div>
     </main>
- );
+  );
 }
+
+// Wrapping Home with Authenticator means any user who is not logged in
+// will see Amplify's built-in login/signup screen instead of this component.
+export default withAuthenticator(Home);
