@@ -1,116 +1,74 @@
 # 🚀 Vendor Tracker
 
-A full-stack **serverless application** built with AWS and Next.js to manage vendors in a simple and scalable way.
+A full-stack serverless web application built with **Next.js**, **AWS CDK**, and **Amazon Cognito**.
+This project demonstrates how to design, build, and deploy a modern cloud-native application using AWS services.
 
 ---
 
-## 🎯 Purpose
+## 🌍 Live Demo
 
-This project was built to learn and practice:
-
-* AWS CDK (Infrastructure as Code)
-* Serverless architecture (AWS Lambda, API Gateway)
-* DynamoDB integration
-* Full-stack development with Next.js
-* Building and deploying real-world cloud applications
-
-It simulates a real-world vendor management system where users can create, view, and delete vendors.
+👉 https://d3qpvq1bmz34n3.cloudfront.net/
 
 ---
 
-## 🧱 Tech Stack
+## 🧠 Project Overview
 
-### Frontend
+Vendor Tracker is a simple CRUD application that allows authenticated users to:
 
-* Next.js (React)
-* TypeScript
-* Tailwind CSS
+* ➕ Add new vendors
+* 📋 View all vendors
+* ❌ Delete vendors
 
-### Backend
-
-* AWS CDK (TypeScript)
-* AWS Lambda
-* AWS API Gateway
-* Amazon DynamoDB
+All data is securely stored in DynamoDB and protected with authentication using Amazon Cognito.
 
 ---
 
-## 🌐 Platform
+## 🏗️ Architecture
 
-* Backend hosted on AWS (Lambda, API Gateway, DynamoDB)
-* Frontend runs locally (or can be deployed on Vercel)
+This project follows a **serverless architecture**:
+
+* **Frontend**: Next.js (React)
+* **Authentication**: Amazon Cognito (JWT-based auth)
+* **API Layer**: API Gateway
+* **Backend Logic**: AWS Lambda (Node.js)
+* **Database**: DynamoDB
+* **Storage**: Amazon S3 (static files)
+* **CDN**: CloudFront (global distribution)
+* **Infrastructure**: AWS CDK (TypeScript)
 
 ---
 
-## 📌 Features
+## ⚙️ How It Works
 
-* ✅ Add a new vendor
-* ✅ View all vendors
-* ✅ Delete a vendor
-* ⚡ Serverless architecture (no traditional server)
+1. The user accesses the app via a CloudFront URL
+2. The frontend (hosted on S3) loads in the browser
+3. The user signs in via Cognito (Amplify handles auth)
+4. The frontend sends requests to API Gateway
+5. API Gateway validates the JWT token
+6. Lambda functions process the request
+7. Data is stored/retrieved from DynamoDB
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
-```bash
+```
 vendor-tracker/
-├── backend/        # AWS CDK + Lambda functions
+├── backend/
 │   ├── lambda/
+│   │   ├── createVendor.ts
+│   │   ├── getVendors.ts
+│   │   └── deleteVendor.ts
 │   ├── lib/
+│   │   └── backend-stack.ts
 │   └── package.json
 │
-├── frontend/       # Next.js application
-│   ├── app/
-│   ├── lib/
-│   ├── types/
-│   └── .env.local
-│
-└── README.md
-```
-
----
-
-## ⚙️ Setup
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR-USERNAME/vendor-tracker.git
-cd vendor-tracker
-```
-
----
-
-### 2. Backend Setup (AWS)
-
-```bash
-cd backend
-npm install
-cdk bootstrap
-cdk deploy
-```
-
-After deployment, you will get an API endpoint like:
-
-```bash
-https://xxxxx.execute-api.us-east-1.amazonaws.com/prod/
-```
-
----
-
-### 3. Frontend Setup
-
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-
-Open your browser at:
-
-```bash
-http://localhost:3000
+└── frontend/
+    ├── app/
+    ├── lib/
+    ├── types/
+    ├── .env.local
+    └── next.config.js
 ```
 
 ---
@@ -119,79 +77,156 @@ http://localhost:3000
 
 Create a file:
 
-```bash
+```
 frontend/.env.local
 ```
 
-Add your API Gateway URL:
+Add:
 
-```bash
-NEXT_PUBLIC_API_URL=YOUR_API_GATEWAY_URL
+```
+NEXT_PUBLIC_API_URL=your-api-gateway-url
+NEXT_PUBLIC_USER_POOL_ID=your-user-pool-id
+NEXT_PUBLIC_USER_POOL_CLIENT_ID=your-client-id
+```
+
+⚠️ Do NOT commit this file to GitHub.
+
+---
+
+## 💻 Run Locally
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/your-username/vendor-tracker.git
+cd vendor-tracker
 ```
 
 ---
 
-## 📁 Environment Example (safe to share)
+### 2. Setup Frontend
 
-```bash
-# frontend/.env.example
-NEXT_PUBLIC_API_URL=YOUR_API_URL_HERE
+```
+cd frontend
+npm install
+npm run dev
+```
+
+App will run on:
+
+```
+http://localhost:3000
+```
+
+---
+
+### 3. Setup Backend
+
+Make sure AWS CLI is configured:
+
+```
+aws configure
+```
+
+Then:
+
+```
+cd backend
+npm install
+cdk bootstrap
+cdk deploy
 ```
 
 ---
 
 ## 🚀 Deployment
 
-### Backend
+### Step 1: Build frontend
 
-* Deploy using AWS CDK:
-
-```bash
-cdk deploy
 ```
-
-### Frontend
-
-* Recommended: Deploy on Vercel
+cd frontend
+npm run build
+```
 
 ---
 
-## ⚠️ Security Notes
+### Step 2: Deploy infrastructure
 
-* ❌ Do NOT commit `.env.local`
-* ❌ Never expose AWS credentials
-* ✅ Use IAM roles and environment variables
+```
+cd ../backend
+cdk deploy
+```
+
+---
+
+After deployment, AWS will output:
+
+```
+CloudFrontURL = https://xxxxx.cloudfront.net
+```
+
+👉 Open this URL to access your live app.
+
+---
+
+## 🔒 Authentication
+
+* Users sign up and log in via Amazon Cognito
+* Cognito issues a JWT token
+* API Gateway validates the token on every request
+* Unauthorized users cannot access the API
+
+---
+
+## 🧪 Troubleshooting
+
+### ❌ 401 Unauthorized
+
+* Check if Authorization header is present
+* Verify Amplify configuration
+* Ensure user is logged in
+
+---
+
+### ❌ 502 Bad Gateway
+
+* Check CloudWatch logs
+* Verify Lambda environment variables
+
+---
+
+### ❌ Frontend not updating
+
+* CloudFront cache issue → redeploy with invalidation
 
 ---
 
 ## 🧠 What I Learned
 
-* How to build a serverless backend with AWS
-* How API Gateway connects to Lambda
-* How to use DynamoDB with AWS SDK v3
-* How to structure a full-stack monorepo
-* How to handle async API calls in React
+* Building serverless APIs with AWS Lambda
+* Managing infrastructure with AWS CDK
+* Implementing authentication with Cognito
+* Deploying frontend apps with S3 and CloudFront
+* Connecting frontend and backend securely
 
 ---
 
-## 🔮 Future Improvements
+## 📌 Future Improvements
 
-* 🔐 Add authentication (AWS Cognito)
-* ✏️ Edit/update vendors
-* 📄 Pagination (replace full table scan)
-* 🎨 Improve UI/UX
-* 🌍 Deploy frontend publicly
+* ✏️ Update vendor functionality
+* 🔍 Search & filtering
+* 📊 Dashboard analytics
+* 🌍 Custom domain (Route 53)
+* ⚡ CI/CD pipeline (GitHub Actions)
 
 ---
 
-## 👨‍💻 Author
+## 🧑‍💻 Author
 
 **Jovany Antoine**
 
 ---
 
-## ⭐ If you like this project
+## 📄 License
 
-Give it a ⭐ on GitHub and follow for more!
-
----
+This project is open-source and available under the MIT License.
