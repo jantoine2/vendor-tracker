@@ -91,9 +91,9 @@ export class BackendStack extends cdk.Stack {
     };
 
     const vendors = api.root.addResource('vendors');
-    vendors.addMethod('POST', new apigateway.LambdaIntegration(createVendorLambda));
-    vendors.addMethod('GET', new apigateway.LambdaIntegration(getVendorsLambda));
-    vendors.addMethod('DELETE', new apigateway.LambdaIntegration(deleteVendorLambda));
+    vendors.addMethod('POST', new apigateway.LambdaIntegration(createVendorLambda),authOptions);
+    vendors.addMethod('GET', new apigateway.LambdaIntegration(getVendorsLambda), authOptions);
+    vendors.addMethod('DELETE', new apigateway.LambdaIntegration(deleteVendorLambda),authOptions);
 
     // 6. Outputs
    new cdk.CfnOutput(this, 'ApiEndpoint', { value: api.url});
